@@ -1,6 +1,5 @@
 
 package com.quizmaster.builder;
-
 import com.quizmaster.factory.MultipleChoiceFactory;
 import com.quizmaster.factory.QuestionFactory;
 import com.quizmaster.model.Answer;

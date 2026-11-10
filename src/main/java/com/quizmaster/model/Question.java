@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class Question {
 
@@ -13,6 +14,7 @@ public abstract class Question {
     private String text;
     private Difficulty difficulty;
     private int points;
+    private final String hint;
     private final List<Answer> answers;
 
     public Question(
@@ -20,6 +22,7 @@ public abstract class Question {
             String text,
             Difficulty difficulty,
             int points,
+            String hint,
             List<Answer> answers
     ) {
         if (id == null || id.isBlank()) {
@@ -46,6 +49,7 @@ public abstract class Question {
         this.text = text;
         this.difficulty = difficulty;
         this.points = points;
+        this.hint = hint;
         this.answers = new ArrayList<>(answers);
 
         validateAnswerIds();
@@ -88,6 +92,8 @@ public abstract class Question {
     public int getPoints() {
         return points;
     }
+
+    public String getHint() { return hint; }
 
     public List<Answer> getAnswers() {
         return Collections.unmodifiableList(answers);
@@ -155,5 +161,11 @@ public abstract class Question {
         }
 
         throw new IllegalArgumentException("Answer not found: " + answerId);
+    }
+
+    public boolean isCorrect(Set<String> selectedIds) {
+        Set<String> correct = answers.stream()
+                .filter(Answer::isCorrect).map(Answer::getId).collect(Collectors.toSet());
+        return correct.equals(selectedIds);
     }
 }

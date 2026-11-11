@@ -1,4 +1,3 @@
-
 package com.quizmaster.builder;
 
 import com.quizmaster.factory.MultipleChoiceFactory;

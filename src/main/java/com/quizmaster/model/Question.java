@@ -1,4 +1,3 @@
-
 package com.quizmaster.model;
 
 import java.util.ArrayList;

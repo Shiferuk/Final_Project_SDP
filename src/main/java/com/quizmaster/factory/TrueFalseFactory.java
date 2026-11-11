@@ -1,4 +1,3 @@
-
 package com.quizmaster.factory;
 
 import com.quizmaster.model.Answer;

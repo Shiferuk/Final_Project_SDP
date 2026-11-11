@@ -1,4 +1,3 @@
-
 package com.quizmaster.builder;
 
 import com.quizmaster.model.Difficulty;

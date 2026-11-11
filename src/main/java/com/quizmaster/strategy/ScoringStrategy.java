@@ -9,4 +9,9 @@ public interface ScoringStrategy {
 
     /** Баллы за вопрос, если на него ответили верно. */
     int pointsFor(Question question);
+
+    /** Максимум баллов за вопрос (для расчёта процента). По умолчанию равен pointsFor. */
+    default int maxPointsFor(Question question) {
+        return pointsFor(question);
+    }
 }

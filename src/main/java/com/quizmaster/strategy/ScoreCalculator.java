@@ -37,7 +37,7 @@ public class ScoreCalculator {
         for (QuestionView view : views) {
             Question q = view.getQuestion();
             int points = strategy.pointsFor(q);
-            max += points;
+            max += strategy.maxPointsFor(q);
             Set<String> selected = answers.getOrDefault(q.getId(), Set.of());
             if (view.isCorrect(selected)) {
                 score += points + view.getBonusPoints();

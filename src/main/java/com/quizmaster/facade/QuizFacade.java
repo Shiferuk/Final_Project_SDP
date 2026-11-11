@@ -14,6 +14,7 @@ import com.quizmaster.repository.AttemptRepository;
 import com.quizmaster.strategy.ScoreCalculator;
 import com.quizmaster.strategy.ScoreReport;
 import com.quizmaster.strategy.ScoringStrategy;
+import com.quizmaster.strategy.TimeAwareScoring;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +39,9 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
     private final Map<String, Set<String>> selectedAnswers = new HashMap<>();
     private ScoreCalculator calculator;
     private ScoreReport lastReport;
+    private final Map<String, Long> shownAtNanos = new HashMap<>();
+    private final Map<String, Long> answerSeconds = new HashMap<>();
+    private long quizStartNanos;
 
     public QuizFacade() {
         this(new AttemptRepository("data/attempts.json"));
@@ -68,6 +72,7 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
 
         calculator = newCalculator;
         lastReport = null;
+        quizStartNanos = System.nanoTime();
         views.clear();
         selectedAnswers.clear();
         for (Question question : quiz.getQuestions()) {
@@ -115,6 +120,19 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
         }
         getQuestionView(questionId);
         selectedAnswers.put(questionId, Set.copyOf(answerIds));
+        // time from showing the question until the last selection (used by TimeBonusScoring)
+        long start = shownAtNanos.getOrDefault(questionId, quizStartNanos);
+        answerSeconds.put(questionId, (System.nanoTime() - start) / 1_000_000_000L);
+    }
+
+    /** UI calls this when a question appears on the screen (starts the answer stopwatch). */
+    public synchronized void questionShown(String questionId) {
+        shownAtNanos.putIfAbsent(questionId, System.nanoTime());
+    }
+
+    /** Statistics of all finished attempts (best / average percent, per quiz). */
+    public synchronized HistoryStatistics getStatistics() {
+        return HistoryStatistics.from(history);
     }
 
     /** Strategy: the algorithm can be changed while the quiz is running. */
@@ -129,7 +147,7 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
         return lastReport;
     }
     public synchronized void startQuiz(String userId, String quizId,
-                                       int durationSeconds, int totalQuestions) {
+                          int durationSeconds, int totalQuestions) {
         if (currentAttempt != null && !currentAttempt.isCompleted()) {
             throw new IllegalStateException("A quiz is already running");
         }
@@ -149,6 +167,8 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
         this.lastReport = null;
         this.views.clear();
         this.selectedAnswers.clear();
+        this.shownAtNanos.clear();
+        this.answerSeconds.clear();
         currentAttempt = new QuizAttempt(
                 UUID.randomUUID().toString(),
                 userId,
@@ -182,6 +202,9 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
             timer.stop();
         }
         if (calculator != null && !views.isEmpty()) {
+            if (calculator.getStrategy() instanceof TimeAwareScoring) {
+                ((TimeAwareScoring) calculator.getStrategy()).setAnswerTimes(answerSeconds);
+            }
             lastReport = calculator.calculate(
                     new ArrayList<>(views.values()), selectedAnswers);
             correctAnswers = lastReport.getCorrectCount();
@@ -209,6 +232,8 @@ public class QuizFacade implements TimerObserver, AutoCloseable {
         calculator = null;
         views.clear();
         selectedAnswers.clear();
+        shownAtNanos.clear();
+        answerSeconds.clear();
     }
 
     public void addObserver(TimerObserver observer) {

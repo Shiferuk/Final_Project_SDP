@@ -44,7 +44,10 @@ public class QuizTimer implements AutoCloseable {
             notifyTimeChanged();
             if (remainingSeconds <= 0) {
                 notifyTimeFinished();
-                scheduler.shutdown();
+                ScheduledExecutorService current = scheduler;
+                if (current != null) {
+                    current.shutdown();
+                }
             }
         }, 1, 1, TimeUnit.SECONDS);
     }

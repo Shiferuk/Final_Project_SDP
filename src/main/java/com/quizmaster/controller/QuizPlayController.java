@@ -14,11 +14,18 @@ import com.quizmaster.strategy.DifficultyBasedScoring;
 import com.quizmaster.strategy.ScoreReport;
 import com.quizmaster.strategy.ScoringStrategy;
 import com.quizmaster.strategy.StandardScoring;
+import com.quizmaster.strategy.TimeBonusScoring;
+import com.quizmaster.facade.HistoryStatistics;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -71,6 +78,10 @@ public class QuizPlayController implements TimerObserver {
     private final Label resultLabel = new Label();
     private final Label statusLabel = new Label();
     private final ListView<String> historyList = new ListView<>();
+    private final Label statsLabel = new Label();
+    private final PieChart pieChart = new PieChart();
+    private final BarChart<String, Number> barChart =
+            new BarChart<>(new CategoryAxis(), new NumberAxis(0, 100, 20));
 
     private final Map<String, BooleanProperty> shownAnswers = new LinkedHashMap<>();
     private final Map<String, Set<String>> chosen = new HashMap<>();
@@ -89,7 +100,7 @@ public class QuizPlayController implements TimerObserver {
         root.setPadding(new Insets(20));
 
         strategyBox.setItems(FXCollections.observableArrayList(
-                new StandardScoring(), new DifficultyBasedScoring()));
+                new StandardScoring(), new DifficultyBasedScoring(), new TimeBonusScoring()));
         strategyBox.setValue(strategyBox.getItems().get(0));
         strategyBox.setConverter(new StringConverter<>() {
             @Override public String toString(ScoringStrategy s) {
@@ -113,6 +124,13 @@ public class QuizPlayController implements TimerObserver {
         resultLabel.setStyle("-fx-font-weight: bold;");
         statusLabel.setStyle("-fx-text-fill: #c62828;");
         historyList.setPrefHeight(160);
+        pieChart.setTitle("Correct vs wrong answers (all attempts)");
+        pieChart.setAnimated(false);
+        pieChart.setPrefHeight(260);
+        barChart.setTitle("Result of each attempt, %");
+        barChart.setAnimated(false);
+        barChart.setLegendVisible(false);
+        barChart.setPrefHeight(260);
 
         startButton.setOnAction(e -> startQuiz());
         cancelButton.setOnAction(e -> cancelQuiz());
@@ -143,7 +161,9 @@ public class QuizPlayController implements TimerObserver {
                 new Separator(),
                 new Label("RESULT"), resultLabel,
                 new Separator(),
-                new Label("HISTORY"), historyList
+                new Label("HISTORY"), historyList,
+                new Label("STATISTICS"), statsLabel,
+                new HBox(10, pieChart, barChart)
         );
 
         refresh();
@@ -242,6 +262,7 @@ public class QuizPlayController implements TimerObserver {
         questionLabel.setText("Question " + (index + 1) + "/" + questions.size()
                 + " [" + question.getDifficulty() + "]\n" + question.getText());
         hintLabel.setText(view.getHint().orElse(""));
+        facade.questionShown(question.getId());
         renderAnswers(view);
         previousButton.setDisable(index == 0);
         nextButton.setDisable(index == questions.size() - 1);
@@ -359,6 +380,30 @@ public class QuizPlayController implements TimerObserver {
                             + "/" + attempt.getResult().getTotalQuestions()
                             + String.format(" (%.0f%%)", attempt.getResult().getPercentage()));
         }
+        refreshStatistics();
+    }
+
+    private void refreshStatistics() {
+        HistoryStatistics stats = facade.getStatistics();
+
+        statsLabel.setText(String.format(
+                "Attempts: %d   Best: %.0f%%   Average: %.0f%%   Correct answers: %d / %d",
+                stats.getTotalAttempts(), stats.getBestPercent(), stats.getAveragePercent(),
+                stats.getTotalCorrect(), stats.getTotalQuestions()));
+
+        pieChart.setData(FXCollections.observableArrayList(
+                new PieChart.Data("Correct (" + stats.getTotalCorrect() + ")", stats.getTotalCorrect()),
+                new PieChart.Data("Wrong (" + stats.getTotalWrong() + ")", stats.getTotalWrong())));
+
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        int number = 1;
+        for (QuizAttempt attempt : facade.getHistory()) {
+            if (attempt.getResult() != null) {
+                series.getData().add(new XYChart.Data<>(
+                        "#" + number++, attempt.getResult().getPercentage()));
+            }
+        }
+        barChart.getData().setAll(List.of(series));
     }
 
     // ----- Observer: timer events arrive on a background thread -----

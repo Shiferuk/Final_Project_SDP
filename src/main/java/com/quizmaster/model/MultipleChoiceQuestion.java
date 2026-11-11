@@ -13,6 +13,15 @@ public class MultipleChoiceQuestion extends Question {
         validateAnswers();
     }
 
+    public MultipleChoiceQuestion(String id, String text,
+                                  Difficulty difficulty, int points,
+                                  String hint, List<Answer> answers) {
+
+        super(id, text, difficulty, points, hint, answers);
+
+        validateAnswers();
+    }
+
     @Override
     public QuestionType getType() {
         return QuestionType.MULTIPLE_CHOICE;

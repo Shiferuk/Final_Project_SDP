@@ -1,3 +1,4 @@
+
 package com.quizmaster.builder;
 
 import com.quizmaster.factory.MultipleChoiceFactory;
@@ -26,7 +27,7 @@ class QuizBuilderValidationTest {
                 .addQuestion(createQuestion("What is Java?"));
 
         assertThrows(
-                IllegalArgumentException.class,
+                IllegalStateException.class,
                 builder::build
         );
     }
@@ -43,7 +44,7 @@ class QuizBuilderValidationTest {
                 .setQuestionLimit(5);
 
         assertThrows(
-                IllegalArgumentException.class,
+                IllegalStateException.class,
                 builder::build
         );
     }
@@ -62,7 +63,7 @@ class QuizBuilderValidationTest {
                 .addQuestion(createQuestion("Question two?"));
 
         assertThrows(
-                IllegalArgumentException.class,
+                IllegalStateException.class,
                 builder::build
         );
     }

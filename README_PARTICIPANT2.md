@@ -22,4 +22,4 @@
 - Участник 3 вызывает `ScoreCalculator.calculate(views, answers)` при завершении теста.
 
 ## Тесты
-`src/test/java/com/quizmaster/Participant2Test.java` - 9 тестов (JUnit 5): `mvn test`.
+`src` - 9 тестов (JUnit 5): `mvn test`.

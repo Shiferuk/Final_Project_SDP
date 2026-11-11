@@ -14,8 +14,14 @@ class Participant2Test {
     /** Простая реализация вопроса для тестов. */
     static class TestQuestion extends Question {
         TestQuestion(String id, Difficulty d, String hint, List<Answer> answers) {
-            super(id, "Вопрос " + id, d, hint, answers);
+            super(id, "Вопрос " + id, d, 1, hint, answers);
         }
+
+        @Override
+        public QuestionType getType() { return QuestionType.MULTIPLE_CHOICE; }
+
+        @Override
+        protected void validateAnswers() { }
     }
 
     static Question q(String id, Difficulty d, String hint) {
@@ -26,8 +32,8 @@ class Participant2Test {
 
     List<QuestionView> quiz() {
         return List.of(new BasicQuestionView(q("1", Difficulty.EASY, null)),
-                       new BasicQuestionView(q("2", Difficulty.MEDIUM, null)),
-                       new BasicQuestionView(q("3", Difficulty.HARD, null)));
+                new BasicQuestionView(q("2", Difficulty.MEDIUM, null)),
+                new BasicQuestionView(q("3", Difficulty.HARD, null)));
     }
 
     @Test

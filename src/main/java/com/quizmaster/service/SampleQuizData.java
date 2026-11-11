@@ -158,34 +158,26 @@ public class SampleQuizData {
             Difficulty difficulty,
             Answer... answers) {
 
-        QuestionFactory factory;
-
-        switch (type) {
-            case MULTIPLE_CHOICE:
-                factory = new MultipleChoiceFactory();
-                break;
-
-            case TRUE_FALSE:
-                factory = new TrueFalseFactory();
-                break;
-
-            case MULTIPLE_SELECT:
-                factory = new MultipleSelectFactory();
-                break;
-
-            default:
-                throw new IllegalArgumentException(
-                        "Unsupported question type."
-                );
-        }
+        QuestionFactory factory = QuestionFactory.forType(type);
 
         return factory.createQuestion(
                 UUID.randomUUID().toString(),
                 text,
                 difficulty,
                 1,
+                hintFor(answers),
                 List.of(answers)
         );
+    }
+
+    private static String hintFor(Answer... answers) {
+        for (Answer answer : answers) {
+            if (answer.isCorrect()) {
+                return "A correct answer starts with '"
+                        + answer.getText().charAt(0) + "'.";
+            }
+        }
+        return "";
     }
 
     private static Answer answer(String text, boolean correct) {

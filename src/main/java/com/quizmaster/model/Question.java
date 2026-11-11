@@ -17,6 +17,11 @@ public abstract class Question {
     private final String hint;
     private final List<Answer> answers;
 
+    public Question(String id, String text, Difficulty difficulty,
+                    int points, List<Answer> answers) {
+        this(id, text, difficulty, points, null, answers);
+    }
+
     public Question(
             String id,
             String text,

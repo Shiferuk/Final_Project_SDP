@@ -16,10 +16,11 @@ public class MultipleChoiceFactory extends QuestionFactory {
             String text,
             Difficulty difficulty,
             int points,
+            String hint,
             List<Answer> answers
     ) {
         return new MultipleChoiceQuestion(
-                id, text, difficulty, points, answers
+                id, text, difficulty, points, hint, answers
         );
     }
 }

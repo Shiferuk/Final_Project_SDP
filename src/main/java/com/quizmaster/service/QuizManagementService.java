@@ -3,6 +3,7 @@ package com.quizmaster.service;
 
 import com.quizmaster.model.Question;
 import com.quizmaster.model.Quiz;
+import com.quizmaster.repository.QuizRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +14,26 @@ import java.util.Map;
 public class QuizManagementService {
 
     private final Map<String, Quiz> quizzes = new LinkedHashMap<>();
+    private final QuizRepository repository;
+
+    /** In-memory service (used by tests). */
+    public QuizManagementService() {
+        this.repository = null;
+    }
+
+    /** Service that loads quizzes on start and saves after every change. */
+    public QuizManagementService(QuizRepository repository) {
+        this.repository = repository;
+        for (Quiz quiz : repository.load()) {
+            quizzes.put(quiz.getId(), quiz);
+        }
+    }
+
+    private void persist() {
+        if (repository != null) {
+            repository.save(new ArrayList<>(quizzes.values()));
+        }
+    }
 
     // Create a new quiz
     public void createQuiz(Quiz quiz) {
@@ -27,6 +48,7 @@ public class QuizManagementService {
         }
 
         quizzes.put(quiz.getId(), quiz);
+        persist();
     }
 
     // Get one quiz by ID
@@ -70,6 +92,7 @@ public class QuizManagementService {
         }
 
         quizzes.put(quizId, updatedQuiz);
+        persist();
     }
 
     // Delete a quiz
@@ -81,18 +104,22 @@ public class QuizManagementService {
         if (quizzes.remove(quizId) == null) {
             throw new IllegalArgumentException("Quiz not found: " + quizId);
         }
+
+        persist();
     }
 
     // Add a question to a quiz
     public void addQuestion(String quizId, Question question) {
         Quiz quiz = getQuiz(quizId);
         quiz.addQuestion(question);
+        persist();
     }
 
     // Remove a question from a quiz
     public void removeQuestion(String quizId, String questionId) {
         Quiz quiz = getQuiz(quizId);
         quiz.removeQuestion(questionId);
+        persist();
     }
 
     // Replace an existing question
@@ -115,6 +142,7 @@ public class QuizManagementService {
 
         Quiz quiz = getQuiz(quizId);
         quiz.replaceQuestion(questionId, updatedQuestion);
+        persist();
     }
 
     // Find quizzes by category

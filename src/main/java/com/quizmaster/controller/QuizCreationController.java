@@ -26,8 +26,7 @@ import java.util.UUID;
 
 public class QuizCreationController {
 
-    private final QuizManagementService quizService =
-            new QuizManagementService();
+    private final QuizManagementService quizService;
 
     private final ObservableList<Question> questions =
             FXCollections.observableArrayList();
@@ -47,6 +46,7 @@ public class QuizCreationController {
     private final ComboBox<QuestionType> questionType = new ComboBox<>();
 
     private final TextArea questionTextArea = new TextArea();
+    private final TextField hintField = new TextField();
     private final ComboBox<Difficulty> questionDifficulty = new ComboBox<>();
 
     private final TextField answer1Field = new TextField();
@@ -67,7 +67,8 @@ public class QuizCreationController {
 
     private final Label statusLabel = new Label();
 
-    public QuizCreationController() {
+    public QuizCreationController(QuizManagementService quizService) {
+        this.quizService = quizService;
         SampleQuizData.load(quizService);
         refreshQuizList();
     }
@@ -94,6 +95,7 @@ public class QuizCreationController {
 
         questionTextArea.setPromptText("Enter your question");
         questionTextArea.setPrefRowCount(2);
+        hintField.setPromptText("Optional hint shown by the Hint button");
 
         quizTitleField.setPromptText("Quiz title");
         categoryField.setPromptText("Category, for example Programming");
@@ -192,6 +194,8 @@ public class QuizCreationController {
                 questionType,
                 new Label("Question text"),
                 questionTextArea,
+                new Label("Hint (optional)"),
+                hintField,
                 new Label("Question difficulty"),
                 questionDifficulty,
 
@@ -269,6 +273,7 @@ public class QuizCreationController {
                     text,
                     questionDifficulty.getValue(),
                     1,
+                    hintField.getText().trim(),
                     createAnswers(type)
             );
 
@@ -286,6 +291,7 @@ public class QuizCreationController {
 
         questionType.setValue(question.getType());
         questionTextArea.setText(question.getText());
+        hintField.setText(question.getHint() == null ? "" : question.getHint());
         questionDifficulty.setValue(question.getDifficulty());
 
         clearAnswerFields();
@@ -352,6 +358,7 @@ public class QuizCreationController {
                     text,
                     questionDifficulty.getValue(),
                     selected.getPoints(),
+                    hintField.getText().trim(),
                     createAnswers(type)
             );
 
@@ -656,6 +663,7 @@ public class QuizCreationController {
     private void clearQuestionEditor() {
 
         questionTextArea.clear();
+        hintField.clear();
         questionDifficulty.setValue(Difficulty.EASY);
 
         clearAnswerFields();

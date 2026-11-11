@@ -16,10 +16,11 @@ public class TrueFalseFactory extends QuestionFactory {
             String text,
             Difficulty difficulty,
             int points,
+            String hint,
             List<Answer> answers
     ) {
         return new TrueFalseQuestion(
-                id, text, difficulty, points, answers
+                id, text, difficulty, points, hint, answers
         );
     }
 }
